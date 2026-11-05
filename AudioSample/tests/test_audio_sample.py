@@ -35,3 +35,8 @@ def test_create_sine_tone(audio_sample):
     audio_sample.sine_tone(note="A", octave=4, duration=duration, amplitude=1.0)
     assert audio_sample.audio is not None
     assert len(audio_sample.audio) == int(audio_sample.sample_rate * duration)
+
+
+def test_chord_error(audio_sample):
+    with pytest.raises(ValueError):
+        audio_sample.chord("C", "demented", 4, 1, 1)

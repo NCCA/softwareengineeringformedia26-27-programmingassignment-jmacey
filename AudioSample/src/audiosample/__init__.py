@@ -1,5 +1,5 @@
 __version__ = "0.0.0"
 
-from .audio_sample import AudioSample
+from .audio_sample import CHORD_TEMPLATES, AudioSample, Note
 
-__all__ = ["AudioSample"]
+__all__ = ["AudioSample", "Note", "CHORD_TEMPLATES"]
