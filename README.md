@@ -68,10 +68,10 @@ AudioSample ..> Note : uses
 
 ### Note
 
-sample_rate: read/write property
-audio: read-only property; setter raises NotImplementedError
-_audio initially None
-chord() uses module-level CHORD_TEMPLATES
+- sample_rate: read/write property
+- audio: read-only property setter raises NotImplementedError
+- _audio initially None
+- chord() uses module-level CHORD_TEMPLATES
 
 ```python
 CHORD_TEMPLATES = {
