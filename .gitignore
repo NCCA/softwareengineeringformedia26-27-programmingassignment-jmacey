@@ -1,3 +1,4 @@
+*.wav # ignore generated wav files
 .zed/
 scratch_code/
 papers/
