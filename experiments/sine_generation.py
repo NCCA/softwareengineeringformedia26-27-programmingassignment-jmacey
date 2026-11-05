@@ -4,6 +4,54 @@ __generated_with = "0.25.2"
 app = marimo.App(width="full")
 
 
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    # Basic Tone Generation
+
+    In this notebook I will investigate how I can make some basic tones to generate a proof of concept of my distortion effect.
+
+    I will use the western 12 tone equal temperament system (12 TET) which is standard for most musical instruments such as piano.
+
+
+    Frequency and octave relationships
+    A musical note is associated with a fundamental frequency, measured in hertz (Hz).
+
+    An octave corresponds to a doubling of frequency:
+    \[
+    f_{\text{octave}}=2f
+    \]
+
+    For example:
+
+
+    |Note	|Frequency|
+    |--------|--------|
+    |A2	|110.00 Hz |
+    |A3	|220.00 Hz |
+    |A4	|440.00 Hz |
+    |A5	|880.00 Hz |
+    |A6	|1760.00 Hz |
+
+    The ratio between adjacent notes in 12 TET is:
+    \[
+    r=2^{1/12}\approx1.059463094
+    \]
+
+    Moving up \(n\) semitones gives:
+    \[
+    \boxed{f_n=f_0\,2^{n/12}}
+    \]
+
+    Here \(f_0\) is the root frequency and \(n\) is the interval in semitones.
+
+    For a root of C4 (approximately 261.626 Hz), we can generate any other pitch using this equation.
+
+    For the following example we will use the standard A 440Hz
+    """)
+    return
+
+
 @app.cell
 def _():
     import marimo as mo
@@ -12,16 +60,6 @@ def _():
     import soundfile as sf
 
     return mo, np, plt, sf
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    # Basic Tone Generation
-
-    In this notebook I will investigate how I can make some basic tones to generate a proof of concept of my distortion effect. I will start with a simple A 440 Hz tone, I will also add an amplitude control.
-    """)
-    return
 
 
 @app.cell
@@ -91,6 +129,11 @@ def _(amplitude, frequency, mo, np, play_duration, sample_rate):
 def _(sample_rate, sf, signal):
     # now write this to disk as a proof of concept.
     sf.write("A440Sine.wav", signal, sample_rate, subtype="FLOAT")
+    return
+
+
+@app.cell
+def _():
     return
 
 
