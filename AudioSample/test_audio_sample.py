@@ -1,3 +1,7 @@
+# /// script
+# dependencies = ["marimo", "audiosample @ git+https://github.com/NCCA/softwareengineeringformedia26-27-programmingassignment-jmacey/tree/main/AudioSample@v0.1.0"]
+# ///
+
 import marimo
 
 __generated_with = "0.25.2"
@@ -17,9 +21,9 @@ def _(mo):
 @app.cell
 def _():
     import marimo as mo
-    import numpy as np
-    from audiosample import ArpeggioMode, AudioSample, Note, CHORD_TEMPLATES
     import matplotlib.pyplot as plt
+    import numpy as np
+    from audiosample import CHORD_TEMPLATES, ArpeggioMode, AudioSample, Note
 
     return ArpeggioMode, AudioSample, CHORD_TEMPLATES, Note, mo, np, plt
 
@@ -35,7 +39,7 @@ def _(AudioSample, mo, plt):
     _ax.plot(sample.audio[:100])  # only show a few samples
     _ax.set_xlabel("Time (ms)")
     _ax.set_ylabel("Amplitude")
-    _ax.set_title(f"A4 Hz sine wave")
+    _ax.set_title("A4 Hz sine wave")
     _ax.set_ylim(-1.1, 1.1)
     _ax.grid(True)
     _fig
@@ -57,16 +61,10 @@ def _(mo):
 @app.cell
 def _(Note, mo):
     # pre define some of our controls so we can use them later
-    play_duration = mo.ui.slider(
-        0.1, 5.0, step=0.1, value=0.5, label="Duration", show_value=True
-    )
+    play_duration = mo.ui.slider(0.1, 5.0, step=0.1, value=0.5, label="Duration", show_value=True)
 
-    amplitude = mo.ui.slider(
-        0.0, 1.0, step=0.01, value=0.5, label="Amplitude", show_value=True
-    )
-    octave = mo.ui.slider(
-        1, 8, step=1, value=4, label="octave", show_value=True
-    )
+    amplitude = mo.ui.slider(0.0, 1.0, step=0.01, value=0.5, label="Amplitude", show_value=True)
+    octave = mo.ui.slider(1, 8, step=1, value=4, label="octave", show_value=True)
     note_picker = mo.ui.dropdown(
         options={note.name.replace("_SHARP", "♯"): note for note in Note},
         value="C",
@@ -107,9 +105,7 @@ def _(amplitude, note_picker, num_samples, octave, play_duration, plt, sample):
     ax.plot(_samples, marker=".", markersize=4)
     ax.set_xlabel("Sample")
     ax.set_ylabel("Amplitude")
-    ax.set_title(
-        f"{note_picker.value.name.replace('_SHARP', '♯')} {octave.value} (first {len(_samples)} samples)"
-    )
+    ax.set_title(f"{note_picker.value.name.replace('_SHARP', '♯')} {octave.value} (first {len(_samples)} samples)")
     ax.set_ylim(-1.1, 1.1)
     ax.grid(True)
     return (fig,)
@@ -134,15 +130,13 @@ def _(
     play_duration,
     sample,
 ):
-    mo.vstack(
-        [
-            mo.hstack([note_picker, octave], justify="start"),
-            mo.hstack([play_duration, amplitude], justify="start"),
-            num_samples,
-            mo.audio(sample.audio, rate=sample.sample_rate, normalize=False),
-            fig,
-        ]
-    )
+    mo.vstack([
+        mo.hstack([note_picker, octave], justify="start"),
+        mo.hstack([play_duration, amplitude], justify="start"),
+        num_samples,
+        mo.audio(sample.audio, rate=sample.sample_rate, normalize=False),
+        fig,
+    ])
     return
 
 
@@ -154,7 +148,7 @@ def _(mo, plt, sample):
     _ax.plot(sample.audio)  # only show a few samples
     _ax.set_xlabel("Time (ms)")
     _ax.set_ylabel("Amplitude")
-    _ax.set_title(f"A4 Hz sine wave")
+    _ax.set_title("A4 Hz sine wave")
     # _ax.set_ylim(-1.1, 1.1)
     _ax.grid(True)
     _fig
@@ -166,16 +160,10 @@ def _(mo, plt, sample):
 @app.cell
 def _(CHORD_TEMPLATES, Note, mo):
     # pre define some of our controls so we can use them later
-    cplay_duration = mo.ui.slider(
-        0.1, 5.0, step=0.1, value=0.5, label="Duration", show_value=True
-    )
+    cplay_duration = mo.ui.slider(0.1, 5.0, step=0.1, value=0.5, label="Duration", show_value=True)
 
-    camplitude = mo.ui.slider(
-        0.0, 1.0, step=0.01, value=0.5, label="Amplitude", show_value=True
-    )
-    coctave = mo.ui.slider(
-        1, 8, step=1, value=4, label="octave", show_value=True
-    )
+    camplitude = mo.ui.slider(0.0, 1.0, step=0.01, value=0.5, label="Amplitude", show_value=True)
+    coctave = mo.ui.slider(1, 8, step=1, value=4, label="octave", show_value=True)
     cnote_picker = mo.ui.dropdown(
         options={note.name.replace("_SHARP", "♯"): note for note in Note},
         value="C",
@@ -244,15 +232,13 @@ def _(
     mo,
     sample,
 ):
-    mo.vstack(
-        [
-            mo.hstack([cnote_picker, cchord_picker, coctave], justify="start"),
-            mo.hstack([cplay_duration, camplitude], justify="start"),
-            cnum_samples,
-            mo.audio(sample.audio, sample.sample_rate, normalize=True),
-            fig_chord,
-        ]
-    )
+    mo.vstack([
+        mo.hstack([cnote_picker, cchord_picker, coctave], justify="start"),
+        mo.hstack([cplay_duration, camplitude], justify="start"),
+        cnum_samples,
+        mo.audio(sample.audio, sample.sample_rate, normalize=True),
+        fig_chord,
+    ])
     return
 
 
@@ -281,27 +267,13 @@ def _(Note, mo):
         value="A",
         label="Note",
     )
-    aoctave = mo.ui.slider(
-        1, 8, step=1, value=4, label="octave", show_value=True
-    )
-    aplay_duration = mo.ui.slider(
-        0.5, 5.0, step=0.1, value=2.0, label="Duration", show_value=True
-    )
-    aamplitude = mo.ui.slider(
-        0.0, 1.0, step=0.01, value=0.8, label="Amplitude", show_value=True
-    )
-    attack = mo.ui.slider(
-        0.0, 2.0, step=0.01, value=0.1, label="Attack (s)", show_value=True
-    )
-    decay = mo.ui.slider(
-        0.0, 2.0, step=0.01, value=0.2, label="Decay (s)", show_value=True
-    )
-    sustain = mo.ui.slider(
-        0.0, 1.0, step=0.01, value=0.6, label="Sustain level", show_value=True
-    )
-    release = mo.ui.slider(
-        0.0, 2.0, step=0.01, value=0.5, label="Release (s)", show_value=True
-    )
+    aoctave = mo.ui.slider(1, 8, step=1, value=4, label="octave", show_value=True)
+    aplay_duration = mo.ui.slider(0.5, 5.0, step=0.1, value=2.0, label="Duration", show_value=True)
+    aamplitude = mo.ui.slider(0.0, 1.0, step=0.01, value=0.8, label="Amplitude", show_value=True)
+    attack = mo.ui.slider(0.0, 2.0, step=0.01, value=0.1, label="Attack (s)", show_value=True)
+    decay = mo.ui.slider(0.0, 2.0, step=0.01, value=0.2, label="Decay (s)", show_value=True)
+    sustain = mo.ui.slider(0.0, 1.0, step=0.01, value=0.6, label="Sustain level", show_value=True)
+    release = mo.ui.slider(0.0, 2.0, step=0.01, value=0.5, label="Release (s)", show_value=True)
     return (
         aamplitude,
         anote_picker,
@@ -376,29 +348,25 @@ def _(
         )
     except ValueError as _error:
         adsr_output = mo.callout(
-            mo.md(
-                f"**{_error}**, try a longer duration or shorter envelope times."
-            ),
+            mo.md(f"**{_error}**, try a longer duration or shorter envelope times."),
             kind="warn",
         )
     else:
-        adsr_output = mo.vstack(
-            [
-                mo.audio(
-                    adsr_sample.audio,
-                    rate=adsr_sample.sample_rate,
-                    normalize=False,
-                ),
-                plot_adsr(
-                    adsr_sample.audio,
-                    adsr_sample.sample_rate,
-                    attack.value,
-                    decay.value,
-                    release.value,
-                    f"{anote_picker.selected_key} {aoctave.value} with ADSR envelope",
-                ),
-            ]
-        )
+        adsr_output = mo.vstack([
+            mo.audio(
+                adsr_sample.audio,
+                rate=adsr_sample.sample_rate,
+                normalize=False,
+            ),
+            plot_adsr(
+                adsr_sample.audio,
+                adsr_sample.sample_rate,
+                attack.value,
+                decay.value,
+                release.value,
+                f"{anote_picker.selected_key} {aoctave.value} with ADSR envelope",
+            ),
+        ])
     return (adsr_output,)
 
 
@@ -415,15 +383,13 @@ def _(
     release,
     sustain,
 ):
-    mo.vstack(
-        [
-            mo.hstack([anote_picker, aoctave], justify="start"),
-            mo.hstack([aplay_duration, aamplitude], justify="start"),
-            mo.hstack([attack, decay], justify="start"),
-            mo.hstack([sustain, release], justify="start"),
-            adsr_output,
-        ]
-    )
+    mo.vstack([
+        mo.hstack([anote_picker, aoctave], justify="start"),
+        mo.hstack([aplay_duration, aamplitude], justify="start"),
+        mo.hstack([attack, decay], justify="start"),
+        mo.hstack([sustain, release], justify="start"),
+        adsr_output,
+    ])
     return
 
 
@@ -445,30 +411,14 @@ def _(CHORD_TEMPLATES, Note, mo):
         value="C",
         label="Root",
     )
-    acchord_picker = mo.ui.dropdown(
-        options=CHORD_TEMPLATES, value="major", label="Chord"
-    )
-    acoctave = mo.ui.slider(
-        1, 8, step=1, value=4, label="octave", show_value=True
-    )
-    acplay_duration = mo.ui.slider(
-        0.5, 5.0, step=0.1, value=2.0, label="Duration", show_value=True
-    )
-    acamplitude = mo.ui.slider(
-        0.0, 1.0, step=0.01, value=0.8, label="Amplitude", show_value=True
-    )
-    acattack = mo.ui.slider(
-        0.0, 2.0, step=0.01, value=0.05, label="Attack (s)", show_value=True
-    )
-    acdecay = mo.ui.slider(
-        0.0, 2.0, step=0.01, value=0.3, label="Decay (s)", show_value=True
-    )
-    acsustain = mo.ui.slider(
-        0.0, 1.0, step=0.01, value=0.5, label="Sustain level", show_value=True
-    )
-    acrelease = mo.ui.slider(
-        0.0, 2.0, step=0.01, value=0.8, label="Release (s)", show_value=True
-    )
+    acchord_picker = mo.ui.dropdown(options=CHORD_TEMPLATES, value="major", label="Chord")
+    acoctave = mo.ui.slider(1, 8, step=1, value=4, label="octave", show_value=True)
+    acplay_duration = mo.ui.slider(0.5, 5.0, step=0.1, value=2.0, label="Duration", show_value=True)
+    acamplitude = mo.ui.slider(0.0, 1.0, step=0.01, value=0.8, label="Amplitude", show_value=True)
+    acattack = mo.ui.slider(0.0, 2.0, step=0.01, value=0.05, label="Attack (s)", show_value=True)
+    acdecay = mo.ui.slider(0.0, 2.0, step=0.01, value=0.3, label="Decay (s)", show_value=True)
+    acsustain = mo.ui.slider(0.0, 1.0, step=0.01, value=0.5, label="Sustain level", show_value=True)
+    acrelease = mo.ui.slider(0.0, 2.0, step=0.01, value=0.8, label="Release (s)", show_value=True)
     return (
         acamplitude,
         acattack,
@@ -512,29 +462,25 @@ def _(
         )
     except ValueError as _error:
         adsr_chord_output = mo.callout(
-            mo.md(
-                f"**{_error}**, try a longer duration or shorter envelope times."
-            ),
+            mo.md(f"**{_error}**, try a longer duration or shorter envelope times."),
             kind="warn",
         )
     else:
-        adsr_chord_output = mo.vstack(
-            [
-                mo.audio(
-                    adsr_chord_sample.audio,
-                    rate=adsr_chord_sample.sample_rate,
-                    normalize=False,
-                ),
-                plot_adsr(
-                    adsr_chord_sample.audio,
-                    adsr_chord_sample.sample_rate,
-                    acattack.value,
-                    acdecay.value,
-                    acrelease.value,
-                    f"{acnote_picker.selected_key} {acchord_picker.selected_key} {acoctave.value} with ADSR envelope",
-                ),
-            ]
-        )
+        adsr_chord_output = mo.vstack([
+            mo.audio(
+                adsr_chord_sample.audio,
+                rate=adsr_chord_sample.sample_rate,
+                normalize=False,
+            ),
+            plot_adsr(
+                adsr_chord_sample.audio,
+                adsr_chord_sample.sample_rate,
+                acattack.value,
+                acdecay.value,
+                acrelease.value,
+                f"{acnote_picker.selected_key} {acchord_picker.selected_key} {acoctave.value} with ADSR envelope",
+            ),
+        ])
     return (adsr_chord_output,)
 
 
@@ -552,17 +498,13 @@ def _(
     adsr_chord_output,
     mo,
 ):
-    mo.vstack(
-        [
-            mo.hstack(
-                [acnote_picker, acchord_picker, acoctave], justify="start"
-            ),
-            mo.hstack([acplay_duration, acamplitude], justify="start"),
-            mo.hstack([acattack, acdecay], justify="start"),
-            mo.hstack([acsustain, acrelease], justify="start"),
-            adsr_chord_output,
-        ]
-    )
+    mo.vstack([
+        mo.hstack([acnote_picker, acchord_picker, acoctave], justify="start"),
+        mo.hstack([acplay_duration, acamplitude], justify="start"),
+        mo.hstack([acattack, acdecay], justify="start"),
+        mo.hstack([acsustain, acrelease], justify="start"),
+        adsr_chord_output,
+    ])
     return
 
 
@@ -590,17 +532,13 @@ def _(ArpeggioMode, CHORD_TEMPLATES, Note, mo):
         value="C",
         label="Root",
     )
-    archord_picker = mo.ui.dropdown(
-        options=CHORD_TEMPLATES, value="major", label="Chord"
-    )
+    archord_picker = mo.ui.dropdown(options=CHORD_TEMPLATES, value="major", label="Chord")
     armode = mo.ui.dropdown(
         options={mode.value: mode for mode in ArpeggioMode},
         value="ascend_descend",
         label="Mode",
     )
-    aroctave = mo.ui.slider(
-        1, 8, step=1, value=4, label="octave", show_value=True
-    )
+    aroctave = mo.ui.slider(1, 8, step=1, value=4, label="octave", show_value=True)
     arnote_duration = mo.ui.slider(
         0.05,
         1.0,
@@ -609,22 +547,12 @@ def _(ArpeggioMode, CHORD_TEMPLATES, Note, mo):
         label="Note duration",
         show_value=True,
     )
-    aramplitude = mo.ui.slider(
-        0.0, 1.0, step=0.01, value=0.8, label="Amplitude", show_value=True
-    )
+    aramplitude = mo.ui.slider(0.0, 1.0, step=0.01, value=0.8, label="Amplitude", show_value=True)
     aruse_adsr = mo.ui.switch(value=True, label="ADSR envelope")
-    arattack = mo.ui.slider(
-        0.0, 0.5, step=0.005, value=0.01, label="Attack (s)", show_value=True
-    )
-    ardecay = mo.ui.slider(
-        0.0, 0.5, step=0.005, value=0.05, label="Decay (s)", show_value=True
-    )
-    arsustain = mo.ui.slider(
-        0.0, 1.0, step=0.01, value=0.6, label="Sustain level", show_value=True
-    )
-    arrelease = mo.ui.slider(
-        0.0, 0.5, step=0.005, value=0.1, label="Release (s)", show_value=True
-    )
+    arattack = mo.ui.slider(0.0, 0.5, step=0.005, value=0.01, label="Attack (s)", show_value=True)
+    ardecay = mo.ui.slider(0.0, 0.5, step=0.005, value=0.05, label="Decay (s)", show_value=True)
+    arsustain = mo.ui.slider(0.0, 1.0, step=0.01, value=0.6, label="Sustain level", show_value=True)
+    arrelease = mo.ui.slider(0.0, 0.5, step=0.005, value=0.1, label="Release (s)", show_value=True)
     return (
         aramplitude,
         arattack,
@@ -692,21 +620,15 @@ def _(
             )
     except ValueError as _error:
         arpeggio_output = mo.callout(
-            mo.md(
-                f"**{_error}**, try a longer note duration or shorter envelope times."
-            ),
+            mo.md(f"**{_error}**, try a longer note duration or shorter envelope times."),
             kind="warn",
         )
     else:
-        _time = (
-            np.arange(len(arpeggio_sample.audio)) / arpeggio_sample.sample_rate
-        )
+        _time = np.arange(len(arpeggio_sample.audio)) / arpeggio_sample.sample_rate
         _fig, _ax = plt.subplots(figsize=(10, 4))
         _ax.plot(_time, arpeggio_sample.audio, linewidth=0.5)
         # each note is the same length so we can work out how many were played from the total
-        _notes = round(
-            len(_time) / (arpeggio_sample.sample_rate * arnote_duration.value)
-        )
+        _notes = round(len(_time) / (arpeggio_sample.sample_rate * arnote_duration.value))
         for _note in range(1, _notes):
             _ax.axvline(
                 _note * arnote_duration.value,
@@ -722,16 +644,14 @@ def _(
         )
         _ax.set_ylim(-1.1, 1.1)
         _ax.grid(True)
-        arpeggio_output = mo.vstack(
-            [
-                mo.audio(
-                    arpeggio_sample.audio,
-                    rate=arpeggio_sample.sample_rate,
-                    normalize=False,
-                ),
-                _fig,
-            ]
-        )
+        arpeggio_output = mo.vstack([
+            mo.audio(
+                arpeggio_sample.audio,
+                rate=arpeggio_sample.sample_rate,
+                normalize=False,
+            ),
+            _fig,
+        ])
     return (arpeggio_output,)
 
 
@@ -751,19 +671,17 @@ def _(
     aruse_adsr,
     mo,
 ):
-    mo.vstack(
-        [
-            mo.hstack(
-                [arnote_picker, archord_picker, armode, aroctave],
-                justify="start",
-            ),
-            mo.hstack([arnote_duration, aramplitude], justify="start"),
-            aruse_adsr,
-            mo.hstack([arattack, ardecay], justify="start"),
-            mo.hstack([arsustain, arrelease], justify="start"),
-            arpeggio_output,
-        ]
-    )
+    mo.vstack([
+        mo.hstack(
+            [arnote_picker, archord_picker, armode, aroctave],
+            justify="start",
+        ),
+        mo.hstack([arnote_duration, aramplitude], justify="start"),
+        aruse_adsr,
+        mo.hstack([arattack, ardecay], justify="start"),
+        mo.hstack([arsustain, arrelease], justify="start"),
+        arpeggio_output,
+    ])
     return
 
 
