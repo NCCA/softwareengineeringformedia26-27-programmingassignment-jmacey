@@ -5,9 +5,9 @@ from pathlib import Path
 import soundfile as sf
 
 if __package__:
-    from .mixer import input_devices
+    from .mixer import input_devices, output_devices
 else:
-    from mixer import input_devices
+    from mixer import input_devices, output_devices
 
 
 class TrainingSession:
@@ -15,6 +15,9 @@ class TrainingSession:
         self._query_devices = query_devices
         self.devices: list[dict] = []
         self.selected_device_id: int = -1
+        self.outputs: list[dict] = []
+        self.selected_output_id: int = -1
+        self.return_channel: int = 1
         self.controls: list[dict] = []
         self.samples: list[dict] = []
 
@@ -53,7 +56,7 @@ class TrainingSession:
         if not 0 <= count <= 16:
             raise ValueError("Choose between 0 and 16 controls")
         self.controls = self.controls[:count] + [
-            {"label": f"Control {i + 1}", "value": 0.5}
+            {"label": f"Control {i + 1}", "value": 0.5, "steps": 3}
             for i in range(len(self.controls), count)
         ]
 
@@ -65,16 +68,32 @@ class TrainingSession:
             raise ValueError("Control values must be between 0 and 1")
         self.controls[index]["value"] = value
 
+    def set_control_steps(self, index: int, steps: int) -> None:
+        if not 2 <= steps <= 101:
+            raise ValueError("Choose between 2 and 101 positions per dial")
+        self.controls[index]["steps"] = steps
+
+    @property
+    def selected_output(self) -> dict | None:
+        return next((d for d in self.outputs if d["id"] == self.selected_output_id), None)
+
     @property
     def selected_device(self) -> dict | None:
         return next((d for d in self.devices if d["id"] == self.selected_device_id), None)
 
     def refresh_devices(self) -> None:
         self.devices = input_devices(self._query_devices)
+        self.outputs = output_devices(self._query_devices)
+        if self.selected_output is None:
+            self.selected_output_id = self.outputs[0]["id"] if self.outputs else -1
         if self.selected_device is None:
             self.selected_device_id = self.devices[0]["id"] if self.devices else -1
+            self.return_channel = 1
+        elif self.return_channel > self.selected_device["channels"]:
+            self.return_channel = 1
 
     def select_device(self, device_id: int) -> None:
         if not any(d["id"] == device_id for d in self.devices):
             raise ValueError("Choose an available audio input")
         self.selected_device_id = device_id
+        self.return_channel = 1

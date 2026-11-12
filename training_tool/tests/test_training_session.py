@@ -24,10 +24,10 @@ def test_resize_controls_preserves_existing_labels_and_positions():
     session.set_control_label(0, "Drive")
     session.set_control_value(0, 0.75)
     session.set_control_count(5)
-    assert session.controls[0] == {"label": "Drive", "value": 0.75}
-    assert session.controls[4] == {"label": "Control 5", "value": 0.5}
+    assert session.controls[0] == {"label": "Drive", "value": 0.75, "steps": 3}
+    assert session.controls[4] == {"label": "Control 5", "value": 0.5, "steps": 3}
     session.set_control_count(1)
-    assert session.controls == [{"label": "Drive", "value": 0.75}]
+    assert session.controls == [{"label": "Drive", "value": 0.75, "steps": 3}]
 
 
 def test_add_folder_select_samples_and_do_not_duplicate_on_reload(tmp_path):

@@ -43,6 +43,15 @@ def input_devices(query_devices: Callable[[], Iterable[Mapping[str, Any]]] | Non
     ]
 
 
+def output_devices(query_devices: Callable[[], Iterable[Mapping[str, Any]]] | None = None) -> list[dict]:
+    query_devices = query_devices or sd.query_devices
+    return [
+        {"id": index, "name": device["name"], "channels": int(device.get("max_output_channels", 0))}
+        for index, device in enumerate(query_devices())
+        if device.get("max_output_channels", 0) > 0
+    ]
+
+
 def list_devices() -> None:
     """Print every device with input channels and its default sample rate."""
     print(f"{'idx':>3}  {'in':>3}  {'rate':>7}  name")
