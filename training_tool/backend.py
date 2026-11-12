@@ -11,16 +11,16 @@ from PySide6.QtCore import QObject, Property, Signal, Slot, QUrl, QThread, QSett
 
 if __package__:
     from .session import TrainingSession
-    from .training import TrainingRun, RecordingCancelled, capture_sample, Capture
+    from .training import TrainingRun, RecordingCancelled, Capture
 else:
     from session import TrainingSession
-    from training import TrainingRun, RecordingCancelled, capture_sample, Capture
+    from training import TrainingRun, RecordingCancelled, Capture
 
 
 class BatchWorker(QThread):
     progress = Signal(str)
 
-    def __init__(self, run: TrainingRun, capture: Capture, parent: QObject) -> None:
+    def __init__(self, run: TrainingRun, capture: Capture | None, parent: QObject) -> None:
         super().__init__(parent)
         self.training_run = run
         self.capture = capture
@@ -52,7 +52,7 @@ class TrainingBackend(QObject):
         self._message = ""
         self._run: TrainingRun | None = None
         self._worker: BatchWorker | None = None
-        self._capture = capture or capture_sample
+        self._capture = capture
         self.session.set_control_count(3)
         self.refreshDevices()
         if self._settings is not None:

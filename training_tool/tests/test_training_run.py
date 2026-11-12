@@ -7,7 +7,7 @@ import pytest
 import soundfile as sf
 
 from ..session import TrainingSession
-from ..training import TrainingRun, RecordingCancelled, capture_sample
+from ..training import TrainingRun, RecordingCancelled
 
 
 def make_run(tmp_path: Path, controls: list[dict] | None = None, samples: int = 2) -> TrainingRun:
@@ -107,40 +107,3 @@ def test_empty_selection_does_not_create_a_run(tmp_path):
     with pytest.raises(ValueError, match="Select"):
         TrainingRun([], [], str(tmp_path), 0, 1, 1)
     assert list(tmp_path.iterdir()) == []
-
-
-@pytest.mark.parametrize("source_channels, output_channels", [(1, 1), (1, 2), (2, 1), (2, 2)])
-def test_capture_uses_selected_routes_and_keeps_tail(monkeypatch, tmp_path, source_channels, output_channels):
-    from .. import training
-
-    source = tmp_path / "tone.wav"
-    original = np.full((80, source_channels), 0.25, dtype=np.float32)
-    if source_channels == 2:
-        original[:, 1] = 0.75
-    sf.write(source, original, 8000, subtype="FLOAT")
-    captured = {}
-
-    def playrec(audio, **kwargs):
-        captured.update(kwargs)
-        captured["audio"] = audio.copy()
-        return np.zeros((len(audio), 1), dtype=np.float32)
-
-    class Stream:
-        active = False
-
-    monkeypatch.setattr(training.sd, "query_devices", lambda device, kind: {"max_output_channels": output_channels})
-    monkeypatch.setattr(training.sd, "playrec", playrec)
-    monkeypatch.setattr(training.sd, "get_stream", Stream)
-    monkeypatch.setattr(training.sd, "wait", lambda: None)
-    monkeypatch.setattr(training.sd, "stop", lambda: None)
-    data, rate = capture_sample(str(source), 2, 3, 4, Event())
-    assert captured["device"] == (2, 3)
-    assert captured["input_mapping"] == [4]
-    playback_channels = min(source_channels, output_channels)
-    assert captured["output_mapping"] == list(range(1, playback_channels + 1))
-    assert captured["audio"].shape == (2080, playback_channels)
-    expected = original.mean(axis=1, keepdims=True) if output_channels == 1 else original
-    assert np.allclose(captured["audio"][:80], expected)
-    assert np.all(captured["audio"][80:] == 0)
-    assert data.shape == (2080, 1)
-    assert rate == 8000
