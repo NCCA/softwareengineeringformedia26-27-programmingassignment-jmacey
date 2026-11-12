@@ -1,11 +1,13 @@
 """Small Qt interface for the training session."""
 
+import json
 import math
+from pathlib import Path
 from threading import Event
 
 import soundfile as sf
 
-from PySide6.QtCore import QObject, Property, Signal, Slot, QUrl, QThread
+from PySide6.QtCore import QObject, Property, Signal, Slot, QUrl, QThread, QSettings, QSaveFile, QIODevice
 
 if __package__:
     from .session import TrainingSession
@@ -41,8 +43,11 @@ class TrainingBackend(QObject):
     messageChanged = Signal()
     trainingChanged = Signal()
 
-    def __init__(self, session: TrainingSession | None = None, capture: Capture | None = None) -> None:
+    def __init__(self, session: TrainingSession | None = None, capture: Capture | None = None,
+                 settings: QSettings | None = None) -> None:
         super().__init__()
+        self._settings = settings if settings is not None else (
+            QSettings("NCCA", "Pedal training samples") if session is None else None)
         self.session = session or TrainingSession()
         self._message = ""
         self._run: TrainingRun | None = None
@@ -50,6 +55,51 @@ class TrainingBackend(QObject):
         self._capture = capture or capture_sample
         self.session.set_control_count(3)
         self.refreshDevices()
+        if self._settings is not None:
+            saved = self._settings.value("setup")
+            if saved is not None:
+                self._restore_settings(saved)
+
+
+    def _restore_settings(self, contents: str) -> None:
+        try:
+            warnings = self.session.restore_settings(json.loads(contents))
+        except (ValueError, TypeError, OSError, RuntimeError) as error:
+            self._set_message(f"Cannot load settings: {error}")
+            return
+        self.devicesChanged.emit()
+        self.controlsChanged.emit()
+        self.samplesChanged.emit()
+        self._set_message("Settings loaded. " + " ".join(warnings))
+
+    @Slot(QUrl)
+    def saveSettings(self, url: QUrl) -> None:
+        if self.runActive or self.recording:
+            return
+        file = QSaveFile(url.toLocalFile())
+        contents = json.dumps(self.session.settings_data(), indent=2).encode("utf-8")
+        if not file.open(QIODevice.OpenModeFlag.WriteOnly):
+            self._set_message(f"Cannot save settings: {file.errorString()}")
+            return
+        if file.write(contents) != len(contents):
+            file.cancelWriting()
+            self._set_message(f"Cannot save settings: {file.errorString()}")
+            return
+        if not file.commit():
+            self._set_message(f"Cannot save settings: {file.errorString()}")
+            return
+        self._set_message("Settings saved.")
+
+    @Slot(QUrl)
+    def loadSettings(self, url: QUrl) -> None:
+        if self.runActive or self.recording:
+            return
+        try:
+            contents = Path(url.toLocalFile()).read_text(encoding="utf-8")
+        except (OSError, UnicodeError) as error:
+            self._set_message(f"Cannot load settings: {error}")
+            return
+        self._restore_settings(contents)
 
     @Property("QVariantList", notify=devicesChanged)
     def devices(self) -> list[dict]:
@@ -298,3 +348,8 @@ class TrainingBackend(QObject):
         if self._worker:
             self._worker.cancelled.set()
             self._worker.wait()
+        if self._settings is not None:
+            self._settings.setValue("setup", json.dumps(self.session.settings_data()))
+            self._settings.sync()
+            if self._settings.status() != QSettings.Status.NoError:
+                self._set_message("Cannot save the last setup to application settings.")
