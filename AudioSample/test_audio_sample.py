@@ -1,6 +1,6 @@
 # /// script
 # dependencies = ["marimo", "audiosample @ git+https://github.com/NCCA/softwareengineeringformedia26-27-programmingassignment-jmacey/tree/main/AudioSample@v0.1.0",
-# "PyAv"]
+# "av"]
 # ///
 
 import marimo
