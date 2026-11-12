@@ -97,3 +97,73 @@ class TrainingSession:
             raise ValueError("Choose an available audio input")
         self.selected_device_id = device_id
         self.return_channel = 1
+
+    def settings_data(self) -> dict:
+        return {
+            "version": 1,
+            "input": self.selected_device["name"] if self.selected_device else None,
+            "output": self.selected_output["name"] if self.selected_output else None,
+            "return_channel": self.return_channel,
+            "controls": [dict(control) for control in self.controls],
+            "samples": [{"path": sample["path"], "selected": sample["selected"]}
+                        for sample in self.samples],
+        }
+
+    def restore_settings(self, data: dict) -> list[str]:
+        """Check the whole setup before replacing the current session."""
+        if not isinstance(data, dict) or data.get("version") != 1:
+            raise ValueError("Unsupported settings format")
+        controls = data.get("controls")
+        samples = data.get("samples")
+        channel = data.get("return_channel", 1)
+        if not isinstance(controls, list) or len(controls) > 16:
+            raise ValueError("Settings must contain between 0 and 16 controls")
+        if not isinstance(samples, list) or type(channel) is not int or channel < 1:
+            raise ValueError("Invalid samples or return channel")
+        for key in ("input", "output"):
+            if data.get(key) is not None and not isinstance(data[key], str):
+                raise ValueError("Invalid audio device name")
+        restored_controls = []
+        for control in controls:
+            if (not isinstance(control, dict)
+                    or not isinstance(control.get("label"), str)
+                    or not control["label"].strip() or len(control["label"]) > 64
+                    or type(control.get("value")) not in (float, int)
+                    or not 0 <= control["value"] <= 1
+                    or type(control.get("steps")) is not int
+                    or not 2 <= control["steps"] <= 101):
+                raise ValueError("Invalid control settings")
+            restored_controls.append({key: control[key] for key in ("label", "value", "steps")})
+        restored_samples = []
+        skipped = []
+        known = set()
+        for sample in samples:
+            if (not isinstance(sample, dict) or not isinstance(sample.get("path"), str)
+                    or type(sample.get("selected")) is not bool):
+                raise ValueError("Invalid sample settings")
+            path = Path(sample["path"]).expanduser().resolve()
+            if str(path) in known:
+                continue
+            known.add(str(path))
+            try:
+                info = sf.info(path)
+            except (OSError, sf.LibsndfileError):
+                skipped.append(str(path))
+                continue
+            restored_samples.append({"name": path.name, "path": str(path),
+                                     "duration": info.duration, "channels": info.channels,
+                                     "sample_rate": info.samplerate, "selected": sample["selected"]})
+        warnings = []
+        for key, available, attribute in (
+                ("input", self.devices, "selected_device_id"),
+                ("output", self.outputs, "selected_output_id")):
+            match = next((d for d in available if d["name"] == data.get(key)), None)
+            setattr(self, attribute, match["id"] if match else (available[0]["id"] if available else -1))
+            if data.get(key) and match is None:
+                warnings.append(f"Audio device unavailable: {data[key]}")
+        self.return_channel = channel if self.selected_device and channel <= self.selected_device["channels"] else 1
+        self.controls = restored_controls
+        self.samples = restored_samples
+        if skipped:
+            warnings.append(f"Skipped missing or unreadable samples: {', '.join(skipped)}")
+        return warnings

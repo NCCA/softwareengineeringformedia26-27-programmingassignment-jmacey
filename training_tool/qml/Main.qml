@@ -28,6 +28,23 @@ ApplicationWindow {
         onAccepted: window.backend.addSampleFolder(selectedFolder)
     }
 
+    FileDialog {
+        id: saveSetup
+        title: "Save training settings"
+        fileMode: FileDialog.SaveFile
+        nameFilters: ["Training settings (*.json)"]
+        defaultSuffix: "json"
+        onAccepted: window.backend.saveSettings(selectedFile)
+    }
+
+    FileDialog {
+        id: loadSetup
+        title: "Load training settings"
+        fileMode: FileDialog.OpenFile
+        nameFilters: ["Training settings (*.json)"]
+        onAccepted: window.backend.loadSettings(selectedFile)
+    }
+
     onClosing: window.backend.shutdown()
 
     FolderDialog {
@@ -54,6 +71,20 @@ ApplicationWindow {
             Label {
                 text: "Choose an input, describe the pedal and select the source audio."
                 color: "#a7b6c8"
+            }
+
+            RowLayout {
+                enabled: !window.backend.runActive && !window.backend.recording
+                Button {
+                    objectName: "saveSettings"
+                    text: "Save settings..."
+                    onClicked: saveSetup.open()
+                }
+                Button {
+                    objectName: "loadSettings"
+                    text: "Load settings..."
+                    onClicked: loadSetup.open()
+                }
             }
 
             GroupBox {
