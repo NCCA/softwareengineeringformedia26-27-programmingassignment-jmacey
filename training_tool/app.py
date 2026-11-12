@@ -1,7 +1,8 @@
+#!/usr/bin/env -S uv run --script
 """Launch the QML training sample preparation window."""
 
-from pathlib import Path
 import sys
+from pathlib import Path
 
 from PySide6.QtCore import QUrl
 from PySide6.QtGui import QGuiApplication
