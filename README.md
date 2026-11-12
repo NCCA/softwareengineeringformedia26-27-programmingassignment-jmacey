@@ -85,6 +85,48 @@ CHORD_TEMPLATES = {
 }
 ```
 
+## Training sample GUI
+
+I am building a PySide6 / QML tool to prepare training sessions. Run it from
+this folder with:
+
+```bash
+uv run python -m training_tool
+```
+
+Choose the mixer input from the combo box (Refresh finds newly connected
+devices). This uses the same input discovery as `experiments/from_mixer.py`.
+The input's channel count and default sample rate appear alongside its name.
+
+Set the number of pedal controls (0–16), edit the labels and turn the dials to
+match the physical pedal. Positions use a normalised 0–1 value, shown as a
+percentage. Changing the count preserves the remaining controls. Reducing it
+removes controls from the end.
+
+Add a folder to list its WAV, FLAC, AIFF and OGG files, then tick the samples
+to use. We can add several folders; duplicate paths are ignored. The list shows
+duration, channels and sample rate, with the full path available on hover.
+Unreadable audio is skipped and reported. Folder loading does not recurse
+into subfolders.
+
+This first version prepares the session in memory. The dials describe the
+physical settings; they do not turn the pedal's knobs. Playback, recording,
+automated capture and saving sessions are still to come.
+
+The Python state lives in `training_tool/session.py`, the Qt interface in
+`training_tool/backend.py`, and the screen in `training_tool/qml/Main.qml`.
+This keeps the session usable independently of the GUI as we add capture.
+
+Run the tests with:
+
+```bash
+uv run --all-packages python -m pytest
+```
+
+The GUI tests run offscreen and do not need an audio device. Sample-folder
+tests use real audio files, and a QML interaction test clicks a sample row to
+check selection through to the session.
+
 ## Next Steps
 
 After the initial proof of concept I will move on to other effects such as reverb, delay, modulation (tremolo etc).
