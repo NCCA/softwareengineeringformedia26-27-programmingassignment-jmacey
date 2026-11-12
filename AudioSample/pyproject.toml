@@ -1,0 +1,25 @@
+[project]
+name = "audiosample"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Jon Macey", email = "jmacey@bournemouth.ac.uk" }
+]
+requires-python = ">=3.14"
+dependencies = [
+    "numpy>=2.5.4",
+    "soundfile>=0.14.0",
+]
+
+[project.scripts]
+audiosample = "audiosample:main"
+
+[build-system]
+requires = ["uv_build>=0.13.6,<0.14.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.2.0",
+]
