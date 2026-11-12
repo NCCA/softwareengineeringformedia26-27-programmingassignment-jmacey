@@ -1,6 +1,9 @@
 # /// script
-# dependencies = ["marimo", "audiosample @ git+https://github.com/NCCA/softwareengineeringformedia26-27-programmingassignment-jmacey/tree/main/AudioSample@v0.1.0",
-# "av"]
+# dependencies = [
+#     "marimo",
+#     "audiosample @ git+https://github.com/NCCA/softwareengineeringformedia26-27-programmingassignment-jmacey.git@v0.1.0#subdirectory=AudioSample",
+#     "av",
+# ]
 # ///
 
 import marimo
