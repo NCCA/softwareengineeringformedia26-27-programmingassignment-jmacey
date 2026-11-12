@@ -1,6 +1,7 @@
 AGENTS.md
 CLAUDE.md
 .worktrees/
+input_data/
 # ignore generated wav files
 *.wav
 .zed/

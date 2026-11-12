@@ -774,13 +774,36 @@ def _(sample):
 
 
 @app.cell
-def _():
-    # _duration = 0.1
-    # for _octave in range(1, 8):
-    #     for _amplitude in np.arange(0.1, 1.0, 0.1):
-    #         for _n in Note:
-    #             sample.sine_tone(_n.name, _octave, _duration, _amplitude)
-    #             sample.write(f"{_n.name}_{_octave}_{_amplitude:0.2f}.wav")
+def _(Note, np, sample):
+    _duration = 0.2
+    # adsr_tone(
+    #         note=anote_picker.value,
+    #         octave=aoctave.value,
+    #         duration=aplay_duration.value,
+    #         amplitude=aamplitude.value,
+    #         attack=attack.value,
+    #         decay=decay.value,
+    #         sustain=sustain.value,
+    #         release=release.value,
+    #     )
+
+    for _octave in range(1, 8):
+        for _amplitude in np.arange(0.1, 1.0, 0.1):
+            for _n in Note:
+                # sample.sine_tone(_n.name, _octave, _duration, _amplitude)
+                sample.adsr_tone(
+                    _n.name,
+                    _octave,
+                    _duration,
+                    _amplitude,
+                    attack=0.01,
+                    decay=0.01,
+                    sustain=0.18,
+                    release=0.01,
+                )
+                sample.write(
+                    f"/Users/jmacey/teaching/SEM/SEMAssignment26-27Jon/input_data/{_n.name}_{_octave}_{_amplitude:0.2f}.wav"
+                )
     return
 
 
