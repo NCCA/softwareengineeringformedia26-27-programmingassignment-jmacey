@@ -2,7 +2,10 @@
 
 from PySide6.QtCore import QObject, Property, Signal, Slot, QUrl
 
-from training_tool.session import TrainingSession
+if __package__:
+    from .session import TrainingSession
+else:
+    from session import TrainingSession
 
 
 class TrainingBackend(QObject):

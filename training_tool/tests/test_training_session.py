@@ -1,4 +1,4 @@
-from training_tool.session import TrainingSession
+from ..session import TrainingSession
 import numpy as np
 import soundfile as sf
 

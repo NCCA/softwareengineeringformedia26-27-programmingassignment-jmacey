@@ -1,4 +1,13 @@
 #!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.14"
+# dependencies = [
+#     "numpy>=2.5.4",
+#     "pyside6>=6.12.0",
+#     "sounddevice>=0.5.6",
+#     "soundfile>=0.14.0",
+# ]
+# ///
 """Launch the QML training sample preparation window."""
 
 import sys
@@ -9,7 +18,10 @@ from PySide6.QtGui import QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtQuickControls2 import QQuickStyle
 
-from training_tool.backend import TrainingBackend
+if __package__:
+    from .backend import TrainingBackend
+else:
+    from backend import TrainingBackend
 
 
 def create_engine(backend: TrainingBackend) -> QQmlApplicationEngine:
@@ -31,3 +43,7 @@ def main() -> int:
     if not engine.rootObjects():
         return 1
     return app.exec()
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

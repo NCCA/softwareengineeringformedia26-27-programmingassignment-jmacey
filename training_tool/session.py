@@ -1,9 +1,13 @@
 """Session state independent of the GUI and physical audio hardware."""
 
-from experiments.mixer_devices import input_devices
 from pathlib import Path
 
 import soundfile as sf
+
+if __package__:
+    from .mixer import input_devices
+else:
+    from mixer import input_devices
 
 
 class TrainingSession:

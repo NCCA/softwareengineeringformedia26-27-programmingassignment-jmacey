@@ -12,9 +12,9 @@ from shiboken6 import delete
 import numpy as np
 import soundfile as sf
 
-from training_tool.app import create_engine
-from training_tool.backend import TrainingBackend
-from training_tool.session import TrainingSession
+from ..app import create_engine
+from ..backend import TrainingBackend
+from ..session import TrainingSession
 
 
 def test_qml_loads_and_controls_follow_the_session():

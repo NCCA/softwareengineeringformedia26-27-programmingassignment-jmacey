@@ -22,4 +22,4 @@ dev = [
 ]
 
 [tool.pytest.ini_options]
-testpaths = ["tests", "AudioSample/tests"]
+testpaths = ["training_tool/tests", "AudioSample/tests"]

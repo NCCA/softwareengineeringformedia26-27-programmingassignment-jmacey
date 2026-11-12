@@ -91,11 +91,13 @@ I am building a PySide6 / QML tool to prepare training sessions. Run it from
 this folder with:
 
 ```bash
-uv run python -m training_tool
+uv run training_tool/app.py
 ```
 
 Choose the mixer input from the combo box (Refresh finds newly connected
-devices). This uses the same input discovery as `experiments/from_mixer.py`.
+devices). Mixer discovery, channel scanning and recording live in
+`training_tool/mixer.py`. The old `experiments/from_mixer.py` command forwards
+to this file.
 The input's channel count and default sample rate appear alongside its name.
 
 Set the number of pedal controls (0–16), edit the labels and turn the dials to
@@ -117,6 +119,10 @@ The Python state lives in `training_tool/session.py`, the Qt interface in
 `training_tool/backend.py`, and the screen in `training_tool/qml/Main.qml`.
 This keeps the session usable independently of the GUI as we add capture.
 
+We can also copy the `training_tool/` folder elsewhere and run `uv run app.py`
+from inside it. The script declares its dependencies for uv and finds its QML
+relative to the script. It does not need the repository or `experiments/`.
+
 Run the tests with:
 
 ```bash
@@ -125,7 +131,8 @@ uv run --all-packages python -m pytest
 
 The GUI tests run offscreen and do not need an audio device. Sample-folder
 tests use real audio files, and a QML interaction test clicks a sample row to
-check selection through to the session.
+check selection through to the session. App tests live in `training_tool/tests/`;
+launch tests also check a copied app folder outside the repository.
 
 ## Next Steps
 
