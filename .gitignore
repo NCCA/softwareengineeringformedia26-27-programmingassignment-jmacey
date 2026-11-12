@@ -1,7 +1,8 @@
 AGENTS.md
 CLAUDE.md
 .worktrees/
-*.wav # ignore generated wav files
+# ignore generated wav files
+*.wav
 .zed/
 scratch_code/
 papers/
