@@ -242,8 +242,13 @@ class TrainingBackend(QObject):
             return "Prepare a run, then set the physical pedal to match the displayed dials."
         if self._run.finished:
             return f"Training complete. {len(self._run.completed)} recordings saved in {self._run.folder}"
-        return (f"Set the pedal for batch {self._run.batch + 1}/{self._run.total_batches}. "
-                f"Each batch records {len(self._run.sources)} input samples.")
+        summary = (f"Set the pedal for batch {self._run.batch + 1}/{self._run.total_batches}. "
+                   f"Each batch records {len(self._run.sources)} input samples.")
+        if self._run.calibration:
+            latency = ", ".join(f"{1000 * frames / rate:.1f} ms ({frames} frames at {rate} Hz)"
+                                for rate, frames in sorted(self._run.calibration.items()))
+            summary += f" Measured loop latency: {latency}."
+        return summary
 
     @Property(str, notify=controlsChanged)
     def planSize(self) -> str:

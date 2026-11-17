@@ -17,6 +17,11 @@ import numpy as np
 import sounddevice as sd
 import soundfile as sf
 
+if __package__:
+    from . import calibration
+else:
+    import calibration
+
 
 type Capture = Callable[[str, int, int, int, Event], tuple[np.ndarray, int]]
 
@@ -44,7 +49,9 @@ class BatchRecorder:
     """Keep a duplex stream running between samples of the same sample rate."""
 
     def __init__(self, device: int, output: int, channel: int,
-                 cancelled: Event, source_channels: int) -> None:
+                 cancelled: Event, source_channels: int,
+                 calibration: dict[int, int] | None = None,
+                 progress: Callable[[str], None] | None = None) -> None:
         self.device = device
         self.output = output
         self.channel = channel
@@ -58,6 +65,11 @@ class BatchRecorder:
         self._job: _CaptureJob | None = None
         self.latency: tuple[float, float] = (0.0, 0.0)
         self.tail_seconds = TAIL_SECONDS
+        # Measured loop delay in frames for each sample rate. The run owns this dict so
+        # calibration happens once per run rather than every time a stream is opened.
+        self.calibration = calibration if calibration is not None else {}
+        self.progress = progress or (lambda message: None)
+        self.latency_frames = 0
 
     def __enter__(self) -> Self:
         return self
@@ -115,19 +127,8 @@ class BatchRecorder:
         if not self._stream.active:
             raise RuntimeError("Audio stream stopped whilst settling")
 
-    def capture(self, source: str, device: int, output: int, channel: int,
-                cancelled: Event) -> tuple[np.ndarray, int]:
-        if cancelled.is_set():
-            raise RecordingCancelled()
-        audio, rate = sf.read(source, dtype="float32", always_2d=True)
-        if not len(audio):
-            raise ValueError(f"Input sample is empty: {source}")
-        if self.output_channels == 1 and audio.shape[1] > 1:
-            audio = audio.mean(axis=1, keepdims=True)
-        self._open(rate)
-        # Include the device's buffering delay as well as the pedal decay tail.
-        self.tail_seconds = TAIL_SECONDS + sum(self.latency)
-        audio = np.pad(audio, ((0, math.ceil(rate * self.tail_seconds)), (0, 0)))
+    def _play(self, audio: np.ndarray, rate: int, cancelled: Event) -> np.ndarray:
+        """Play audio on the open stream and return the return channel, index aligned with the playback."""
         job = _CaptureJob(audio, np.empty((len(audio), 1), dtype=np.float32))
         deadline = monotonic() + len(audio) / rate + max(5.0, sum(self.latency))
         self._job = job
@@ -145,9 +146,57 @@ class BatchRecorder:
                 raise RuntimeError(f"Audio callback failed: {job.error}") from job.error
             if job.status:
                 raise RuntimeError(f"Audio discontinuity during recording: {job.status}")
-            return job.recorded, rate
+            return job.recorded
         finally:
             self._job = None
+
+    def calibrate(self, rate: int, cancelled: Event) -> int:
+        """
+        Measure the loop delay at this rate by playing a sweep through the pedal several times.
+
+        Parameters
+        ----------
+            rate : int
+                sample rate of the open stream
+            cancelled : Event
+                set to stop the measurement
+
+        Returns
+        -------
+            int
+                the delay in frames
+        """
+        self._open(rate)
+        signal = calibration.make_calibration_signal(rate)
+        # Send the sweep to every output channel so it reaches the pedal whichever side is wired.
+        playback = np.repeat(signal[:, None], self.output_channels, axis=1)
+        max_delay = int(calibration.MAX_DELAY_SECONDS * rate)
+        delays = []
+        for repeat in range(calibration.REPEATS):
+            self.progress(f"Measuring loop latency at {rate} Hz ({repeat + 1}/{calibration.REPEATS})...")
+            recorded = self._play(playback, rate, cancelled)
+            delays.append(calibration.measure_delay(signal, recorded[:, 0], max_delay))
+        return calibration.combine_measurements(delays, rate)
+
+    def capture(self, source: str, device: int, output: int, channel: int,
+                cancelled: Event) -> tuple[np.ndarray, int]:
+        if cancelled.is_set():
+            raise RecordingCancelled()
+        audio, rate = sf.read(source, dtype="float32", always_2d=True)
+        if not len(audio):
+            raise ValueError(f"Input sample is empty: {source}")
+        if self.output_channels == 1 and audio.shape[1] > 1:
+            audio = audio.mean(axis=1, keepdims=True)
+        self._open(rate)
+        if rate not in self.calibration:
+            self.calibration[rate] = self.calibrate(rate, cancelled)
+        self.latency_frames = self.calibration[rate]
+        # Record for the loop delay as well as the decay tail, then drop the delay from the
+        # start so the recording lines up sample for sample with the input.
+        tail = math.ceil(rate * self.tail_seconds)
+        audio = np.pad(audio, ((0, tail + self.latency_frames), (0, 0)))
+        recorded = self._play(audio, rate, cancelled)
+        return recorded[self.latency_frames:], rate
 
 
 def capture_sample(source: str, device: int, output: int, channel: int,
@@ -168,6 +217,8 @@ class TrainingRun:
         self.total_batches = math.prod(c["steps"] for c in controls)
         self.batch = 0
         self.completed: list[dict] = []
+        # Loop delay in frames keyed by sample rate, measured on the first batch.
+        self.calibration: dict[int, int] = {}
         self.device, self.output, self.channel = device, output, channel
         self.folder = Path(tempfile.mkdtemp(prefix="training-", dir=folder))
         inputs = self.folder / "inputs"
@@ -199,8 +250,10 @@ class TrainingRun:
             "return_channel": self.channel, "tail_seconds": TAIL_SECONDS,
             "capture_settings": {"requested_latency_seconds": REQUESTED_LATENCY,
                                  "minimum_settling_seconds": SETTLING_SECONDS,
-                                 "tail_includes_device_latency": True},
-            "alignment": "raw device timing; align input and output before training",
+                                 "latency_compensated": True},
+            "calibration": {str(rate): {"latency_frames": frames, "latency_seconds": frames / rate}
+                            for rate, frames in self.calibration.items()},
+            "alignment": "measured loop latency removed; outputs line up sample for sample with inputs",
             "total_batches": self.total_batches, "completed_batches": self.batch,
             "recordings": self.completed,
         }
@@ -223,6 +276,7 @@ class TrainingRun:
                 recorder = stack.enter_context(BatchRecorder(
                     self.device, self.output, self.channel, cancelled,
                     max(sf.info(self.inputs[i]).channels for i in pending),
+                    self.calibration, progress,
                 ))
                 capture = recorder.capture
             for index in pending:
@@ -244,6 +298,7 @@ class TrainingRun:
                 if recorder is not None:
                     self.completed[-1]["device_latency_seconds"] = list(recorder.latency)
                     self.completed[-1]["tail_seconds"] = recorder.tail_seconds
+                    self.completed[-1]["latency_frames"] = recorder.latency_frames
                 try:
                     self._save_manifest()
                 except Exception:
