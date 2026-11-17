@@ -184,3 +184,18 @@ def test_stereo_source_can_prepare_a_run_with_mono_output(tmp_path):
     assert backend.runActive
     assert "too few channels" not in backend.message
     backend.endRun()
+
+
+def test_summary_reports_measured_loop_latency(tmp_path):
+    devices = [{"name": "Test mixer", "max_input_channels": 4,
+                "max_output_channels": 2, "default_samplerate": 8000}]
+    sf.write(tmp_path / "one.wav", np.full(80, 0.25), 8000)
+    app = QGuiApplication.instance() or QGuiApplication([])
+    backend = TrainingBackend(TrainingSession(query_devices=lambda: devices), capture=lambda *args: None)
+    backend.addSampleFolder(QUrl.fromLocalFile(str(tmp_path)))
+    backend.selectAllSamples(True)
+    backend.prepareRun(QUrl.fromLocalFile(str(tmp_path)))
+    assert "latency" not in backend.trainingSummary
+    # Calibration normally happens on the first batch; set it directly to check the display.
+    backend._run.calibration[8000] = 400
+    assert "Measured loop latency: 50.0 ms (400 frames at 8000 Hz)" in backend.trainingSummary
