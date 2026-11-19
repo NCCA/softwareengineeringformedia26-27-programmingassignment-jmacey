@@ -1,3 +1,4 @@
+#!/usr/bin/env -S uv run marimo edit --watch
 import marimo
 
 __generated_with = "0.25.2"
@@ -7,9 +8,9 @@ app = marimo.App(width="full")
 @app.cell
 def _():
     import marimo as mo
-    from pedalutils import PedalDataset
     import matplotlib.pyplot as plt
     import numpy as np
+    from pedalutils import PedalDataset
 
     return PedalDataset, mo, np, plt
 
@@ -26,16 +27,14 @@ def _(mo):
 
 @app.cell(hide_code=True)
 def _(mo):
-    loader_ui = mo.ui.dictionary(
-        {
-            "file": mo.ui.file_browser(
-                filetypes=[".json"],
-                multiple=False,
-                restrict_navigation=False,
-                label="Manifest file",
-            )
-        }
-    ).form(submit_button_label="Load")
+    loader_ui = mo.ui.dictionary({
+        "file": mo.ui.file_browser(
+            filetypes=[".json"],
+            multiple=False,
+            restrict_navigation=False,
+            label="Manifest file",
+        )
+    }).form(submit_button_label="Load")
     loader_ui
     return (loader_ui,)
 
@@ -55,9 +54,7 @@ def _(PedalDataset, loader_ui, mo):
 
 @app.cell(hide_code=True)
 def _(mo, number_of_samples):
-    selected_sample = mo.ui.slider(
-        start=0, stop=number_of_samples, label="Select Sample", show_value=True
-    )
+    selected_sample = mo.ui.slider(start=0, stop=number_of_samples, label="Select Sample", show_value=True)
     return (selected_sample,)
 
 
@@ -70,14 +67,13 @@ def _():
 def _(dataset, mo, np, plt, selected_sample):
     current_sample = dataset[selected_sample.value]
 
-    figure, _axes = plt.subplots(
-        2, 1, figsize=(12, 5), sharex=True, sharey=True, layout="constrained"
-    )
+    figure, _axes = plt.subplots(2, 1, figsize=(12, 5), sharex=True, sharey=True, layout="constrained")
     for _axis, _signal, _label, _colour in zip(
         _axes,
         current_sample[:2],
         ("Dry signal", "Wet signal"),
         ("tab:blue", "tab:orange"),
+        strict=False,
     ):
         _audio = _signal.detach().cpu().numpy()
         _time = np.arange(_audio.shape[-1]) / dataset._sample_rate
@@ -96,45 +92,29 @@ def _(dataset, mo, np, plt, selected_sample):
             _axis.legend()
     _axes[-1].set_xlabel("Time (s)")
 
-    mo.vstack(
-        [
-            mo.hstack(
-                [
-                    selected_sample,
-                    mo.md(
-                        f"Controls **{dataset.control_labels[0]}** {current_sample[2][0]} **{dataset.control_labels[1]}** {current_sample[2][1]} **{dataset.control_labels[2]}** {current_sample[2][2]}"
-                    ),
-                ]
+    mo.vstack([
+        mo.hstack([
+            selected_sample,
+            mo.md(
+                f"Controls **{dataset.control_labels[0]}** {current_sample[2][0]} **{dataset.control_labels[1]}** {current_sample[2][1]} **{dataset.control_labels[2]}** {current_sample[2][2]}"
             ),
-            mo.hstack(
-                [
-                    mo.vstack(
-                        [
-                            mo.md(
-                                "**Dry signal**\nOriginal recording before processing."
-                            ),
-                            mo.audio(
-                                src=current_sample[0],
-                                rate=44000,
-                                normalize=True,
-                            ),
-                        ]
-                    )
-                ]
-            ),
-            mo.vstack(
-                [
-                    mo.md(
-                        "**Wet signal**\nOriginal recording after processing."
-                    ),
-                    mo.audio(
-                        src=current_sample[1], rate=44000, normalize=True
-                    ),
-                ]
-            ),
-            figure,
-        ]
-    )
+        ]),
+        mo.hstack([
+            mo.vstack([
+                mo.md("**Dry signal**\nOriginal recording before processing."),
+                mo.audio(
+                    src=current_sample[0],
+                    rate=44000,
+                    normalize=True,
+                ),
+            ])
+        ]),
+        mo.vstack([
+            mo.md("**Wet signal**\nOriginal recording after processing."),
+            mo.audio(src=current_sample[1], rate=44000, normalize=True),
+        ]),
+        figure,
+    ])
     return
 
 
