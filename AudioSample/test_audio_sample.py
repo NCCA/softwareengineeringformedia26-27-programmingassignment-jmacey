@@ -725,9 +725,7 @@ def _(Note, sample):
                     sustain=1.0,
                     release=0.05,
                 )
-                sample.write(
-                    f"/Users/jmacey/teaching/SEM/SEMAssignment26-27Jon/input_data/{_n.name}_{_octave}_{_amplitude:0.2f}.wav"
-                )
+                sample.write(f"{_n.name}_{_octave}_{_amplitude:0.2f}.wav")
     return
 
 
